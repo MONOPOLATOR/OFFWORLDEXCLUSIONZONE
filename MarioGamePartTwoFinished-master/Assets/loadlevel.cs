@@ -16,6 +16,7 @@ public class loadlevel: MonoBehaviour
     public GameObject RendHolder;
     public Texture2D tempTileset;
     byte[] workingLevel;
+    public string levelToLoad = "0000_START.lvl";
     public struct Tile
     {
         public int tileSet;
@@ -59,12 +60,13 @@ public class loadlevel: MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        RendHolder = this.transform.parent.gameObject;
         fileSize = SETTINGS_BLOCK_SIZE + (TILE_LAYERS * LEVEL_SIZE * LEVEL_SIZE * TILE_SIZE) + (MAX_OBJECTS * OBJECT_SIZE);
         MakeSpriteArray();
         workingLevel = new byte[fileSize];
         workingTiles = new Tile[TILE_LAYERS, LEVEL_SIZE, LEVEL_SIZE];
         workingObjs = new Obj[MAX_OBJECTS];
-        LoadLevel("0000_START.lvl");
+        LoadLevel(levelToLoad);
         //SaveLevel (workingLevel,"TEST.lvl");
         //LoadLevel (workingFileName);
 
@@ -128,8 +130,6 @@ public class loadlevel: MonoBehaviour
                     if (subb1 != 31) { Debug.Log("Loaded a tile at " + l + "," + x + "," + y + " (" + tilepos + ")"); }
                     //if (x == 0) { Debug.Log(subb1); }
                     int setcombined = setb1 << 8 | setb2;
-                    workingTiles[l, y, x].tileSet = setcombined;
-                    workingTiles[l, y, x].subTile = subb1;
                     if (subb1 != 31)
                     {
                         GameObject n = new GameObject();
@@ -139,7 +139,7 @@ public class loadlevel: MonoBehaviour
                         sr.sprite = SpriteArray[(int)subb1];
                         n.transform.position = new Vector3(x, y, l);
                         n.transform.parent = RendHolder.transform;
-                        n.AddComponent<BoxCollider2D>();
+                        if (l == 1) { n.AddComponent<BoxCollider2D>(); }
                     }
                     
                 }
@@ -147,6 +147,95 @@ public class loadlevel: MonoBehaviour
             }
         }
         Debug.Log("Level loaded.");
+        Debug.Log("Checking and spawning adjacent levels... ");
+        if (workingSettings.up != 0)
+        {
+            string fileNameFragment = workingSettings.up.ToString("X4");
+            DirectoryInfo searchIn = new DirectoryInfo(Application.persistentDataPath);
+            FileInfo[] fileToSpawn = searchIn.GetFiles("*" + fileNameFragment + "*_*");
+            if (fileToSpawn.Length != 0)
+            {
+                string toLoad = fileToSpawn[0].Name;
+                Debug.Log("Level " + toLoad + " found above. Spawning...");
+                GameObject n = new GameObject();
+                loadlevel ll = n.AddComponent <loadlevel>();
+                //Debug.Log ((int)workingLevel[SETTINGS_BLOCK_SIZE + (i*TILE_SIZE)]);
+                ll.levelToLoad = toLoad;
+                ll.tempTileset = tempTileset;
+                n.transform.position = new Vector3(this.transform.position.x + 000, this.transform.position.y + LEVEL_SIZE, 0);
+            }
+            else
+            {
+                Debug.Log("Level not found at "+fileNameFragment);
+            }
+
+        }
+        if (workingSettings.down != 0)
+        {
+            string fileNameFragment = workingSettings.down.ToString("X4");
+            DirectoryInfo searchIn = new DirectoryInfo(Application.persistentDataPath);
+            FileInfo[] fileToSpawn = searchIn.GetFiles("*" + fileNameFragment + "*_*");
+            if (fileToSpawn.Length != 0)
+            {
+                string toLoad = fileToSpawn[0].Name;
+                Debug.Log("Level " + toLoad + " found above. Spawning...");
+                GameObject n = new GameObject();
+                loadlevel ll = n.AddComponent<loadlevel>();
+                //Debug.Log ((int)workingLevel[SETTINGS_BLOCK_SIZE + (i*TILE_SIZE)]);
+                ll.levelToLoad = toLoad;
+                ll.tempTileset = tempTileset;
+                n.transform.position = new Vector3(this.transform.position.x + 000, this.transform.position.y - LEVEL_SIZE, 0);
+            }
+            else
+            {
+                Debug.Log("Level not found at " + fileNameFragment);
+            }
+
+        }
+        if (workingSettings.left != 0)
+        {
+            string fileNameFragment = workingSettings.left.ToString("X4");
+            DirectoryInfo searchIn = new DirectoryInfo(Application.persistentDataPath);
+            FileInfo[] fileToSpawn = searchIn.GetFiles("*" + fileNameFragment + "*_*");
+            if (fileToSpawn.Length != 0)
+            {
+                string toLoad = fileToSpawn[0].Name;
+                Debug.Log("Level " + toLoad + " found above. Spawning...");
+                GameObject n = new GameObject();
+                loadlevel ll = n.AddComponent<loadlevel>();
+                //Debug.Log ((int)workingLevel[SETTINGS_BLOCK_SIZE + (i*TILE_SIZE)]);
+                ll.levelToLoad = toLoad;
+                ll.tempTileset = tempTileset;
+                n.transform.position = new Vector3(this.transform.position.x - LEVEL_SIZE, this.transform.position.y + 000, 0);
+            }
+            else
+            {
+                Debug.Log("Level not found at " + fileNameFragment);
+            }
+
+        }
+        if (workingSettings.right != 0)
+        {
+            string fileNameFragment = workingSettings.right.ToString("X4");
+            DirectoryInfo searchIn = new DirectoryInfo(Application.persistentDataPath);
+            FileInfo[] fileToSpawn = searchIn.GetFiles("*" + fileNameFragment + "*_*");
+            if (fileToSpawn.Length != 0)
+            {
+                string toLoad = fileToSpawn[0].Name;
+                Debug.Log("Level " + toLoad + " found above. Spawning...");
+                GameObject n = new GameObject();
+                loadlevel ll = n.AddComponent<loadlevel>();
+                //Debug.Log ((int)workingLevel[SETTINGS_BLOCK_SIZE + (i*TILE_SIZE)]);
+                ll.levelToLoad = toLoad;
+                ll.tempTileset = tempTileset;
+                n.transform.position = new Vector3(this.transform.position.x + LEVEL_SIZE, this.transform.position.y + 000, 0);
+            }
+            else
+            {
+                Debug.Log("Level not found at " + fileNameFragment);
+            }
+
+        }
     }
     //EXTREMELY TEMPORARY
     void MakeSpriteArray()
@@ -160,11 +249,5 @@ public class loadlevel: MonoBehaviour
                 //Debug.Log (i + " " + j);
             }
         }
-    }
-    void SetTile(int layer, int x, int y, int tileSet, byte subTile)
-    {
-        workingTiles[layer, y, x].tileSet = tileSet;
-        workingTiles[layer, y, x].subTile = subTile;
-        RendHolder.transform.Find("" + layer + "_" + x + "_" + y).gameObject.GetComponent<SpriteRenderer>().sprite = SpriteArray[subTile];
     }
 }

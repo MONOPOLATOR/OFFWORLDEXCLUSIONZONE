@@ -54,6 +54,7 @@ public class LevelEditor : MonoBehaviour
 	const int MAX_OBJECTS = 2048;
 	const int OBJECT_SIZE = 12;
     int fileSize;
+    int workingLayer = 1;
 	//EXTREMELY TEMPORARY; FIX IN NEXT REVISION
 	Sprite[] SpriteArray;
 	// Use this for initialization
@@ -104,17 +105,17 @@ public class LevelEditor : MonoBehaviour
 
                 //BRUSH
                 //row 1
-                SetTile(1, x - 1, y + 1, 0, 24);
-                SetTile(1, x + 0, y + 1, 0, 25);
-                SetTile(1, x + 1, y + 1, 0, 26);
+                SetTile(workingLayer, x - 1, y + 1, 0, 24);
+                SetTile(workingLayer, x + 0, y + 1, 0, 25);
+                SetTile(workingLayer, x + 1, y + 1, 0, 26);
                 //row 2
-                SetTile(1, x - 1, y + 0, 0, 16);
-                SetTile(1, x + 0, y + 0, 0, 17);
-                SetTile(1, x + 1, y + 0, 0, 18);
+                SetTile(workingLayer, x - 1, y + 0, 0, 16);
+                SetTile(workingLayer, x + 0, y + 0, 0, 17);
+                SetTile(workingLayer, x + 1, y + 0, 0, 18);
                 //row 3
-                SetTile(1, x - 1, y - 1, 0, 8);
-                SetTile(1, x + 0, y - 1, 0, 9);
-                SetTile(1, x + 1, y - 1, 0, 10);
+                SetTile(workingLayer, x - 1, y - 1, 0, 8);
+                SetTile(workingLayer, x + 0, y - 1, 0, 9);
+                SetTile(workingLayer, x + 1, y - 1, 0, 10);
                 Debug.Log("Placed at " + x +"," + y);
             }
             if (Input.GetMouseButtonDown(1))
@@ -142,7 +143,7 @@ public class LevelEditor : MonoBehaviour
         
 	}
     bool mouseInCamera(){ if (mousePos.x<c.pixelWidth) {return true;} else {return false;} }
-
+    public void setWorkingLayer(int layer) { workingLayer = layer; }
     //FILE SHIT
     //UI SHIT
     public void UpdateWorkingFileName(string update) {workingFileName = update;}
