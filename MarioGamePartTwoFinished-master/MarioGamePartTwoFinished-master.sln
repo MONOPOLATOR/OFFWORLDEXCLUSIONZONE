@@ -1,7 +1,7 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarioGamePartTwoFinished-master", "Assembly-CSharp.csproj", "{BD9C0E49-FF4E-2F7B-1ACE-80FD08B0765D}"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2017
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarioGamePartTwoFinished-master", "MarioGamePartTwoFinished-master.csproj", "{FFB7899D-48AC-5336-67C8-F3EE899AE200}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -9,15 +9,12 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{BD9C0E49-FF4E-2F7B-1ACE-80FD08B0765D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BD9C0E49-FF4E-2F7B-1ACE-80FD08B0765D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BD9C0E49-FF4E-2F7B-1ACE-80FD08B0765D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BD9C0E49-FF4E-2F7B-1ACE-80FD08B0765D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FFB7899D-48AC-5336-67C8-F3EE899AE200}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FFB7899D-48AC-5336-67C8-F3EE899AE200}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FFB7899D-48AC-5336-67C8-F3EE899AE200}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FFB7899D-48AC-5336-67C8-F3EE899AE200}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = Assembly-CSharp.csproj
 	EndGlobalSection
 EndGlobal
