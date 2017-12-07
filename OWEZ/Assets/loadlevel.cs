@@ -1,0 +1,262 @@
+﻿using System.IO;
+using System;
+using UnityEngine;
+[System.Serializable]
+public class loadlevel: MonoBehaviour
+{
+    /*
+     * 
+     * 
+     * 
+     * 
+     * 
+     * 
+    */
+
+    public Transform RendHolder;
+    public Texture2D tempTileset;
+    byte[] workingLevel;
+    public string levelToLoad = "0000_START.lvl";
+    public struct Tile
+    {
+        public int tileSet;
+        public byte subTile;
+    }
+    public struct Obj
+    {
+        public byte x;
+        public byte y;
+        public int V1;
+        public int V2;
+        public int V3;
+        public int ObjId;
+    }
+    public struct SettingsBlock
+    {
+        //what level to load in each position, 2 bytes
+        public int up;
+        public int down;
+        public int left;
+        public int right;
+    }
+    Tile[,,] workingTiles;
+    Obj[] workingObjs;
+    SettingsBlock workingSettings;
+    //file name format is 4 hex numbers followed by an underscore and then just whatever
+    public string workingFileName;
+    const int TILES_PER_FILE = 32;
+    const int TILES_PER_LINE = 8;
+    const int TILE_RESOLUTION = 16;
+    const int SETTINGS_BLOCK_SIZE = 8;
+    const int LEVEL_SIZE = 128;
+    const int TILE_SIZE = 3;
+    //FEATURE NOT YET IMPLEMENTED
+    const int TILE_LAYERS = 3;
+    const int MAX_OBJECTS = 2048;
+    const int OBJECT_SIZE = 12;
+    int fileSize;
+    //EXTREMELY TEMPORARY; FIX IN NEXT REVISION
+    Sprite[] SpriteArray;
+    // Use this for initialization
+    void Start()
+    {
+        RendHolder = this.transform;
+        fileSize = SETTINGS_BLOCK_SIZE + (TILE_LAYERS * LEVEL_SIZE * LEVEL_SIZE * TILE_SIZE) + (MAX_OBJECTS * OBJECT_SIZE);
+        MakeSpriteArray();
+        workingLevel = new byte[fileSize];
+        workingTiles = new Tile[TILE_LAYERS, LEVEL_SIZE, LEVEL_SIZE];
+        workingObjs = new Obj[MAX_OBJECTS];
+        workingSettings = new SettingsBlock();
+        LoadLevel(levelToLoad);
+        //SaveLevel (workingLevel,"TEST.lvl");
+        //LoadLevel (workingFileName);
+
+    }
+    void Update()
+    {
+        
+
+    }
+    //FILE SHIT
+
+    //REAL FILE SHIT
+    
+    void LoadLevel(string fileName)
+    {
+        Debug.Log("Loading...");
+        //creates blank file if level not found
+        if (!File.Exists(Application.persistentDataPath + "/" + fileName))
+        {
+            Debug.Log("Level was blank, creating new level");
+            byte[] blankLevel = new byte[fileSize];
+            for (int i = 0; i < LEVEL_SIZE * LEVEL_SIZE * TILE_LAYERS; i++)
+            {
+                blankLevel[SETTINGS_BLOCK_SIZE + (i * TILE_SIZE) + 0] = 0;
+                blankLevel[SETTINGS_BLOCK_SIZE + (i * TILE_SIZE) + 1] = 0;
+                blankLevel[SETTINGS_BLOCK_SIZE + (i * TILE_SIZE) + 2] = 31;
+            }
+            File.WriteAllBytes(Application.persistentDataPath + "/" + fileName, blankLevel);
+            Debug.Log("New level created.");
+        }
+        //ok now we know it exists, so...
+        workingLevel = File.ReadAllBytes(Application.persistentDataPath + "/" + fileName);
+        Debug.Log("Level file found. Loading level file...");
+        //actual loading
+        Debug.Log("Loading settings.");
+        byte ub1 = workingLevel[0];
+        byte ub2 = workingLevel[1];
+        byte db1 = workingLevel[2];
+        byte db2 = workingLevel[3];
+        byte lb1 = workingLevel[4];
+        byte lb2 = workingLevel[5];
+        byte rb1 = workingLevel[6];
+        byte rb2 = workingLevel[7];
+        workingSettings.up = ub1 << 8 | ub2;
+        Debug.Log(workingSettings.up);
+        workingSettings.down = db1 << 8 | db2;
+        Debug.Log(workingSettings.down);
+        workingSettings.left = lb1 << 8 | lb2;
+        Debug.Log(workingSettings.left);
+        workingSettings.right = rb1 << 8 | rb2;
+        Debug.Log(workingSettings.right);
+        Debug.Log("Loading tiles.");
+        for (int l = 0; l < TILE_LAYERS; l++)
+        {
+            Debug.Log("Loading layer " + l);
+            for (int y = 0; y < LEVEL_SIZE; y++)
+            {
+                for (int x = 0; x < LEVEL_SIZE; x++)
+                {
+                    //getting the bytes of the tile
+                    int tilepos = SETTINGS_BLOCK_SIZE + ((y * LEVEL_SIZE + x) * TILE_SIZE) + (LEVEL_SIZE * LEVEL_SIZE * TILE_SIZE * l);
+                    byte setb1 = workingLevel[tilepos + 0];
+                    byte setb2 = workingLevel[tilepos + 1];
+                    byte subb1 = workingLevel[tilepos + 2];
+                    if (subb1 != 31) { Debug.Log("Loaded a tile at " + l + "," + x + "," + y + " (" + tilepos + ")"); }
+                    //if (x == 0) { Debug.Log(subb1); }
+                    int setcombined = setb1 << 8 | setb2;
+                    if (subb1 != 31)
+                    {
+                        GameObject n = new GameObject();
+                        n.name = "" + l + "_" + x + "_" + y;
+                        SpriteRenderer sr = n.AddComponent<SpriteRenderer>();
+                        //Debug.Log ((int)workingLevel[SETTINGS_BLOCK_SIZE + (i*TILE_SIZE)]);
+                        sr.sprite = SpriteArray[(int)subb1];
+                        n.transform.parent = RendHolder;
+                        n.transform.localPosition = new Vector3(x, y, l);
+                        if (l == 1) { n.AddComponent<BoxCollider2D>(); }
+                    }
+                    
+                }
+
+            }
+        }
+        Debug.Log("Level loaded.");
+        Debug.Log("Checking and spawning adjacent levels... ");
+        if (workingSettings.up != 0)
+        {
+            string fileNameFragment = workingSettings.up.ToString("X4");
+            DirectoryInfo searchIn = new DirectoryInfo(Application.persistentDataPath);
+            FileInfo[] fileToSpawn = searchIn.GetFiles("*" + fileNameFragment + "*_*");
+            if (fileToSpawn.Length != 0)
+            {
+                string toLoad = fileToSpawn[0].Name;
+                Debug.Log("Level " + toLoad + " found above. Spawning...");
+                GameObject n = new GameObject();
+                loadlevel ll = n.AddComponent <loadlevel>();
+                //Debug.Log ((int)workingLevel[SETTINGS_BLOCK_SIZE + (i*TILE_SIZE)]);
+                ll.levelToLoad = toLoad;
+                ll.tempTileset = tempTileset;
+                ll.RendHolder = ll.transform;
+                n.transform.position = new Vector3(this.transform.position.x + 000, this.transform.position.y + LEVEL_SIZE, 0);
+            }
+            else
+            {
+                Debug.Log("Level not found at "+fileNameFragment);
+            }
+
+        }
+        if (workingSettings.down != 0)
+        {
+            string fileNameFragment = workingSettings.down.ToString("X4");
+            DirectoryInfo searchIn = new DirectoryInfo(Application.persistentDataPath);
+            FileInfo[] fileToSpawn = searchIn.GetFiles("*" + fileNameFragment + "*_*");
+            if (fileToSpawn.Length != 0)
+            {
+                string toLoad = fileToSpawn[0].Name;
+                Debug.Log("Level " + toLoad + " found below. Spawning...");
+                GameObject n = new GameObject();
+                loadlevel ll = n.AddComponent<loadlevel>();
+                //Debug.Log ((int)workingLevel[SETTINGS_BLOCK_SIZE + (i*TILE_SIZE)]);
+                ll.levelToLoad = toLoad;
+                ll.tempTileset = tempTileset;
+                ll.RendHolder = ll.transform;
+                n.transform.position = new Vector3(this.transform.position.x + 000, this.transform.position.y - LEVEL_SIZE, 0);
+            }
+            else
+            {
+                Debug.Log("Level not found at " + fileNameFragment);
+            }
+
+        }
+        if (workingSettings.left != 0)
+        {
+            string fileNameFragment = workingSettings.left.ToString("X4");
+            DirectoryInfo searchIn = new DirectoryInfo(Application.persistentDataPath);
+            FileInfo[] fileToSpawn = searchIn.GetFiles("*" + fileNameFragment + "*_*");
+            if (fileToSpawn.Length != 0)
+            {
+                string toLoad = fileToSpawn[0].Name;
+                Debug.Log("Level " + toLoad + " found left. Spawning...");
+                GameObject n = new GameObject();
+                loadlevel ll = n.AddComponent<loadlevel>();
+                //Debug.Log ((int)workingLevel[SETTINGS_BLOCK_SIZE + (i*TILE_SIZE)]);
+                ll.levelToLoad = toLoad;
+                ll.tempTileset = tempTileset;
+                ll.RendHolder = ll.transform;
+                n.transform.position = new Vector3(this.transform.position.x - LEVEL_SIZE, this.transform.position.y + 000, 0);
+            }
+            else
+            {
+                Debug.Log("Level not found at " + fileNameFragment);
+            }
+
+        }
+        if (workingSettings.right != 0)
+        {
+            string fileNameFragment = workingSettings.right.ToString("X4");
+            DirectoryInfo searchIn = new DirectoryInfo(Application.persistentDataPath);
+            FileInfo[] fileToSpawn = searchIn.GetFiles("*" + fileNameFragment + "*_*");
+            if (fileToSpawn.Length != 0)
+            {
+                string toLoad = fileToSpawn[0].Name;
+                Debug.Log("Level " + toLoad + " found right. Spawning...");
+                GameObject n = new GameObject();
+                loadlevel ll = n.AddComponent<loadlevel>();
+                //Debug.Log ((int)workingLevel[SETTINGS_BLOCK_SIZE + (i*TILE_SIZE)]);
+                ll.levelToLoad = toLoad;
+                ll.tempTileset = tempTileset;
+                ll.RendHolder = ll.transform;
+                n.transform.position = new Vector3(this.transform.position.x + LEVEL_SIZE, this.transform.position.y + 000, 0);
+            }
+            else
+            {
+                Debug.Log("Level not found at " + fileNameFragment);
+            }
+
+        }
+    }
+    //EXTREMELY TEMPORARY
+    void MakeSpriteArray()
+    {
+        SpriteArray = new Sprite[TILES_PER_FILE];
+        for (int i = 0; i < TILES_PER_FILE / TILES_PER_LINE; i++)
+        {
+            for (int j = 0; j < TILES_PER_LINE; j++)
+            {
+                SpriteArray[i * TILES_PER_LINE + j] = Sprite.Create(tempTileset, new Rect(j * TILE_RESOLUTION, i * TILE_RESOLUTION, TILE_RESOLUTION, TILE_RESOLUTION), new Vector2(0.5f, 0.5f), TILE_RESOLUTION);
+                //Debug.Log (i + " " + j);
+            }
+        }
+    }
+}
